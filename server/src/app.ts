@@ -2,10 +2,11 @@ import express from "express";
 import type { Response, ErrorRequestHandler } from "express";
 import { z } from "zod";
 import type { RootStore, Result, StoreError } from "./store.ts";
+import {createBatcher} from "./batcher.ts";
 
 
 
-const pageQuery = z.object({
+const zQuery = z.object({
   filter: z.string().regex(/^\d*$/, "filter: только цифры").max(16).default(""),
   cursor: z.coerce.number().int().nonnegative().optional(),
 });
@@ -48,40 +49,50 @@ export function createApp(store: RootStore) {
   const app = express();
   app.use(express.json());
 
-  app.get("/api/left", (req, res) => {
-    const q = pageQuery.safeParse(req.query);
+  const readQueue = createBatcher(1000); //чтение и изменения
+  const addToQueue = createBatcher(10000); //добавления
+
+  app.get("/api/left", async(req, res) => {
+    const q = zQuery.safeParse(req.query);
     if (!q.success) return sendError(res, "validation_error", q.error.issues[0]?.message);
-    res.json(store.getLeftItems(q.data.filter, q.data.cursor ?? null));
+    const {filter, cursor}=q.data
+    res.json(await readQueue.putTaskToQueue(()=>store.getLeftItems(filter, cursor ?? null)));
   });
 
-  app.get("/api/right", (req, res) => {
-    const q = pageQuery.safeParse(req.query);
+  app.get("/api/right", async(req, res) => {
+    const q = zQuery.safeParse(req.query);
     if (!q.success) return sendError(res, "validation_error", q.error.issues[0]?.message);
-    res.json(store.getRightItems(q.data.filter, q.data.cursor ?? null));
+    const { filter, cursor } = q.data;
+    res.json(await readQueue.putTaskToQueue(() => store.getRightItems(filter, cursor ?? null)));
   });
 
-  app.post("/api/select", (req, res) => {
-    const b = idBody.safeParse(req.body);
-    if (!b.success) return sendError(res, "validation_error", b.error.issues[0]?.message);
-    sendResult(res, store.selectItem(b.data.id));
+  app.post("/api/select", async (req, res) => {
+    const body = idBody.safeParse(req.body);
+    if (!body.success) return sendError(res, "validation_error", body.error.issues[0]?.message);
+    const {id} =body.data
+    sendResult(res, await readQueue.putTaskToQueue(() => store.selectItem(id)));
   });
 
-  app.post("/api/deselect", (req, res) => {
-    const b = idBody.safeParse(req.body);
-    if (!b.success) return sendError(res, "validation_error", b.error.issues[0]?.message);
-    sendResult(res, store.deselectItem(b.data.id));
+  app.post("/api/deselect", async (req, res) => {
+    const body = idBody.safeParse(req.body);
+    if (!body.success) return sendError(res, "validation_error", body.error.issues[0]?.message);
+     const { id } = body.data;
+    sendResult(res, await readQueue.putTaskToQueue(() => store.deselectItem(id)));
   });
 
-  app.post("/api/move", (req, res) => {
-    const b = moveBody.safeParse(req.body);
-    if (!b.success) return sendError(res, "validation_error", b.error.issues[0]?.message);
-    sendResult(res, store.moveItem(b.data.id, b.data.targetId, b.data.place));
+  app.post("/api/move", async (req, res) => {
+    const body = moveBody.safeParse(req.body);
+    if (!body.success) return sendError(res, "validation_error", body.error.issues[0]?.message);
+    const { id, targetId, place } = body.data;
+      sendResult(res, await readQueue.putTaskToQueue(() => store.moveItem(id, targetId, place)));
   });
 
-  app.post("/api/add", (req, res) => {
-    const b = idBody.safeParse(req.body);
-    if (!b.success) return sendError(res, "validation_error", b.error.issues[0]?.message);
-    sendResult(res, store.addItem(b.data.id));
+  app.post("/api/add", async (req, res) => {
+    const body = idBody.safeParse(req.body);
+    if (!body.success) return sendError(res, "validation_error", body.error.issues[0]?.message);
+    const { id } = body.data;
+    sendResult(res, await addToQueue.putTaskToQueue(() => store.addItem(id)))
+  
   });
 
   //  неожиданная ошибка превращается в JSON 500.
