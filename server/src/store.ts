@@ -11,10 +11,10 @@ export type StoreError =
 export type Result = { ok: true } | { ok: false; error: StoreError };
 
 export function createStore(baseSize: number = BASE_SIZE) {
-  const order: number[] = []; // порядок
-  const selected = new Set<number>(); // проверка выбран ли ID
-  const added: number[] = []; // добавленные
-  const addedSet = new Set<number>(); // проверка добавлен ли ID
+  const order: number[] = []; // правый список
+  const selected = new Set<number>(); // выбранные 
+  const added: number[] = []; // левый список с доьавлением по возрастаниб
+  const addedSet = new Set<number>(); // проверка дублей
 
   function isValidId(id: number): boolean {
     return id > 0;
@@ -23,20 +23,27 @@ export function createStore(baseSize: number = BASE_SIZE) {
     return (id <= baseSize && id > 0) || addedSet.has(id);
   }
 
+  function matchesFilter(id: number, filter: string): boolean {
+    return filter === "" || String(id).includes(filter);
+  }
+
+  function fits(id: number, filter: string): boolean {
+    return !selected.has(id) && matchesFilter(id, filter);
+  }
+
   function getLeftItems(filter: string, cursor: number | null): Page {
     const items: number[] = [];
     const start = cursor ?? 0;
 
     //  курсор от начала до baseSize.
     for (let id = start + 1; id <= baseSize && items.length < PAGE_SIZE; id++) {
-      if (filter === "" || String(id).includes(filter)) items.push(id);
+      if (fits(id, filter)) items.push(id);
     }
 
     // добавленные элементы, которые больше курсора и соответствуют фильтру
     for (const id of added) {
       if (items.length >= PAGE_SIZE) break;
-      if (id > start && (filter === "" || String(id).includes(filter)))
-        items.push(id);
+      if (fits(id, filter) && id > start) items.push(id);
     }
 
     // определяем следующий курсор
@@ -45,15 +52,48 @@ export function createStore(baseSize: number = BASE_SIZE) {
     return { items, nextCursor };
   }
 
-  function getRightItems() {
-    throw new Error("not implemented");
+  function getRightItems(filter: string, cursor: number | null): Page {
+    const items: number[] = [];
+    const start = cursor === null ? 0 : order.indexOf(cursor) + 1;
+
+    for (let i = start; i < order.length && items.length < PAGE_SIZE; i++) {
+      const id = order[i]!;
+      if (matchesFilter(id, filter)) items.push(id);
+    }
+
+    const nextCursor =
+      items.length === PAGE_SIZE ? (items.at(-1) ?? null) : null;
+    return { items, nextCursor };
   }
 
-  function selectItem() {
-    throw new Error("not implemented");
+  function selectItem(id: number): Result {
+    if (!checkExists(id)) return { ok: false, error: "item_not_found" }; // id нет
+    if (selected.has(id)) return { ok: true }; // уже выбран
+
+    selected.add(id);
+    order.push(id);
+    return { ok: true };
   }
+  // вытащить и вставить
+  function moveItem(id: number, targetId: number, place: Place): Result {
+    if (!selected.has(id) || !selected.has(targetId)) {
+      return { ok: false, error: "not_selected" };
+    }
+    if (id === targetId) return { ok: true };
+
+    order.splice(order.indexOf(id), 1);
+    const targetIndex = order.indexOf(targetId);
+    const insertAt = place === "before" ? targetIndex : targetIndex + 1;
+    order.splice(insertAt, 0, id);
+    return { ok: true };
+  }
+
   function deselectItem(id: number): Result {
-    throw new Error("not implemented");
+    if (!selected.has(id)) return { ok: true }; // не выбран
+
+    selected.delete(id);
+    order.splice(order.indexOf(id), 1);
+    return { ok: true };
   }
   function addItem() {
     throw new Error("not implemented");
@@ -64,5 +104,6 @@ export function createStore(baseSize: number = BASE_SIZE) {
     selectItem,
     deselectItem,
     addItem,
+    moveItem,
   };
 }
