@@ -12,12 +12,12 @@ export type Result = { ok: true } | { ok: false; error: StoreError };
 
 export function createStore(baseSize: number = BASE_SIZE) {
   const order: number[] = []; // правый список
-  const selected = new Set<number>(); // выбранные 
+  const selected = new Set<number>(); // выбранные
   const added: number[] = []; // левый список с доьавлением по возрастаниб
   const addedSet = new Set<number>(); // проверка дублей
 
   function isValidId(id: number): boolean {
-    return id > 0;
+    return Number.isInteger(id) && id > 0;
   }
   function checkExists(id: number): boolean {
     return (id <= baseSize && id > 0) || addedSet.has(id);
@@ -95,8 +95,16 @@ export function createStore(baseSize: number = BASE_SIZE) {
     order.splice(order.indexOf(id), 1);
     return { ok: true };
   }
-  function addItem() {
-    throw new Error("not implemented");
+
+  // проверка перед добавлением
+  function addItem(id: number): Result {
+    if (!isValidId(id)) return { ok: false, error: "invalid_id" };
+    if (checkExists(id)) return { ok: false, error: "duplicate_item" };
+
+    addedSet.add(id);
+    added.push(id);
+    added.sort((a, b) => a - b);
+    return { ok: true };
   }
   return {
     getLeftItems,
@@ -107,3 +115,6 @@ export function createStore(baseSize: number = BASE_SIZE) {
     moveItem,
   };
 }
+
+
+export type RootStore = ReturnType<typeof createStore>;
