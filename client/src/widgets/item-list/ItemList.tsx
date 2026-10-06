@@ -4,9 +4,11 @@ import { getPage } from "../../shared/api/client";
 type Props = {
   side: "left" | "right";
   filter: string;
+  version: number;
+  onItemClick: (id: number) => void;
 };
 
-export function ItemList({ side, filter }: Props) {
+export function ItemList({ side, filter, version, onItemClick }: Props) {
   const [items, setItems] = useState<number[]>([]);
   const [cursor, setCursor] = useState<number | null>(null);
   const loading = useRef(false);
@@ -17,7 +19,7 @@ export function ItemList({ side, filter }: Props) {
       setItems(page.items);
       setCursor(page.nextCursor);
     });
-  }, [side, filter]);
+  }, [side, filter, version]);
 
   // подгрузка при прокрутке до конца
   async function handleScroll(e: UIEvent<HTMLDivElement>) {
@@ -36,8 +38,8 @@ export function ItemList({ side, filter }: Props) {
     <div onScroll={handleScroll} className="h-120 overflow-y-auto">
       {items.map((id) => (
         <div
-          key={id}
-          className="px-3 py-1.5 mb-1 bg-pixel-bg border-2 border-pixel-border"
+          onClick={() => onItemClick(id)}
+          className="px-3 py-1.5 mb-1 bg-pixel-bg border-2 border-pixel-border cursor-pointer hover:border-pixel-accent hover:text-pixel-accent"
         >
           #{id}
         </div>
