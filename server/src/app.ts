@@ -56,42 +56,42 @@ export function createApp(store: RootStore) {
     const q = zQuery.safeParse(req.query);
     if (!q.success) return sendError(res, "validation_error", q.error.issues[0]?.message);
     const {filter, cursor}=q.data
-    res.json(await readQueue.putTaskToQueue(()=>store.getLeftItems(filter, cursor ?? null)));
+    res.json(await readQueue.putTaskToQueue(`left:${filter}:${cursor ?? ""}`, () => store.getLeftItems(filter, cursor ?? null), false));
   });
 
   app.get("/api/right", async(req, res) => {
     const q = zQuery.safeParse(req.query);
     if (!q.success) return sendError(res, "validation_error", q.error.issues[0]?.message);
     const { filter, cursor } = q.data;
-    res.json(await readQueue.putTaskToQueue(() => store.getRightItems(filter, cursor ?? null)));
+    res.json(await readQueue.putTaskToQueue(`right:${filter}:${cursor ?? ""}`, () => store.getRightItems(filter, cursor ?? null), false));
   });
 
   app.post("/api/select", async (req, res) => {
     const body = idBody.safeParse(req.body);
     if (!body.success) return sendError(res, "validation_error", body.error.issues[0]?.message);
     const {id} =body.data
-    sendResult(res, await readQueue.putTaskToQueue(() => store.selectItem(id)));
+    sendResult(res, await readQueue.putTaskToQueue(`select:${id}`, () => store.selectItem(id), true));
   });
 
   app.post("/api/deselect", async (req, res) => {
     const body = idBody.safeParse(req.body);
     if (!body.success) return sendError(res, "validation_error", body.error.issues[0]?.message);
      const { id } = body.data;
-    sendResult(res, await readQueue.putTaskToQueue(() => store.deselectItem(id)));
+    sendResult(res, await readQueue.putTaskToQueue(`deselect:${id}`, () => store.deselectItem(id), true));
   });
 
   app.post("/api/move", async (req, res) => {
     const body = moveBody.safeParse(req.body);
     if (!body.success) return sendError(res, "validation_error", body.error.issues[0]?.message);
     const { id, targetId, place } = body.data;
-      sendResult(res, await readQueue.putTaskToQueue(() => store.moveItem(id, targetId, place)));
+     sendResult(res, await readQueue.putTaskToQueue(`move:${id}:${targetId}:${place}`, () => store.moveItem(id, targetId, place), true));
   });
 
   app.post("/api/add", async (req, res) => {
     const body = idBody.safeParse(req.body);
     if (!body.success) return sendError(res, "validation_error", body.error.issues[0]?.message);
     const { id } = body.data;
-    sendResult(res, await addToQueue.putTaskToQueue(() => store.addItem(id)))
+    sendResult(res, await addToQueue.putTaskToQueue(`add:${id}`, () => store.addItem(id), true));
   
   });
 

@@ -1,4 +1,5 @@
 import { PixelBox } from "../shared/ui";
+import { ItemList } from "../widgets/item-list/ItemList";
 
 export function App() {
   return (
@@ -14,13 +15,11 @@ export function App() {
 
       <main className="flex-1 grid grid-cols-2 gap-4 min-h-0">
         <PixelBox className="flex flex-col min-h-0">
-          <h2 className="font-pixel text-[10px] text-pixel-text-dim mb-3">{"> ALL ITEMS"}</h2>
-          <p className="text-pixel-text-dim text-sm">список 1</p>
+         <ItemList side="left" filter="" />
         </PixelBox>
 
         <PixelBox className="flex flex-col min-h-0">
-          <h2 className="font-pixel text-[10px] text-pixel-gold mb-3">{"> SELECTED"}</h2>
-          <p className="text-pixel-text-dim text-sm">список </p>
+         <ItemList side="right" filter="" />
         </PixelBox>
       </main>
     </div>
