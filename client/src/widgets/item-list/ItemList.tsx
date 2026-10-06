@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type UIEvent } from "react";
 import { getPage } from "../../shared/api/client";
 
 type Props = {
@@ -20,7 +20,7 @@ export function ItemList({ side, filter }: Props) {
   }, [side, filter]);
 
   // подгрузка при прокрутке до конца
-  async function handleScroll(e) {
+  async function handleScroll(e: UIEvent<HTMLDivElement>) {
     const el = e.currentTarget;
     const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 50;
     if (!atBottom || cursor === null || loading.current) return;
@@ -33,7 +33,7 @@ export function ItemList({ side, filter }: Props) {
   }
 
   return (
-    <div onScroll={handleScroll} className="h-[480px] overflow-y-auto">
+    <div onScroll={handleScroll} className="h-120 overflow-y-auto">
       {items.map((id) => (
         <div
           key={id}
