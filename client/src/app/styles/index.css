@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+/*
+ * Pixel UI Theme
+ *
+ * Палитра ограничена 16 цветами (как NES).
+ * Все компоненты используют pixel-border (box-shadow вместо border-radius).
+ * Шрифт "Press Start 2P" для заголовков, monospace для контента.
+ */
+
+@theme {
+  --color-pixel-bg: #1a1c2c;
+  --color-pixel-surface: #262b44;
+  --color-pixel-border: #3a4466;
+  --color-pixel-text: #c0cbdc;
+  --color-pixel-text-dim: #5a6988;
+  --color-pixel-accent: #38b764;
+  --color-pixel-accent-hover: #4dd87a;
+  --color-pixel-danger: #b13e53;
+  --color-pixel-warning: #ef7d57;
+  --color-pixel-info: #41a6f6;
+  --color-pixel-gold: #f4b41b;
+
+  --font-pixel: "Press Start 2P", monospace;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* Base styles */
+body {
+  background-color: var(--color-pixel-bg);
+  color: var(--color-pixel-text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Pixel border utility */
+.pixel-box {
+  background-color: var(--color-pixel-surface);
+  border: 2px solid var(--color-pixel-border);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.05),
+    2px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Pixel button */
+.pixel-btn {
+  background-color: var(--color-pixel-accent);
+  color: var(--color-pixel-bg);
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  padding: 8px 16px;
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  box-shadow: inset -1px -1px 0 rgba(0, 0, 0, 0.2),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.2), 2px 2px 0 rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: transform 0.05s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.pixel-btn:hover {
+  background-color: var(--color-pixel-accent-hover);
+}
+
+.pixel-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: inset -1px -1px 0 rgba(0, 0, 0, 0.2),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Pixel input */
+.pixel-input {
+  background-color: var(--color-pixel-bg);
+  border: 2px solid var(--color-pixel-border);
+  color: var(--color-pixel-text);
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.pixel-input:focus {
+  border-color: var(--color-pixel-accent);
+}
+
+.pixel-input::placeholder {
+  color: var(--color-pixel-text-dim);
+}
+
+/* Pixel cursor blink */
+@keyframes pixel-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.pixel-cursor::after {
+  content: "_";
+  animation: pixel-blink 1s step-end infinite;
+  color: var(--color-pixel-accent);
+}
+
+/* Typewriter effect */
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.pixel-typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typewriter 1.5s steps(20) forwards;
+}
+
+/* Fade-in for cards */
+@keyframes pixel-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pixel-fade-in {
+  animation: pixel-fade-in 0.2s ease-out;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-pixel-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-pixel-border);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-pixel-text-dim);
+}
