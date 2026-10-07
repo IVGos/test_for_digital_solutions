@@ -46,6 +46,7 @@ export function App() {
               filter={leftSearch}
               version={version}
               onItemClick={handleSelect}
+              
             />
           </div>
         </PixelBox>
@@ -65,6 +66,7 @@ export function App() {
               filter={rightSearch}
               version={version}
               onItemClick={handleDeselect}
+              onChange={() => setVersion((v) => v + 1)}
             />
           </div>
         </PixelBox>
