@@ -44,15 +44,14 @@ export function ItemList({
 
   async function handleDragge(id: number) {
     const elem = draggedItemId.current;
-    draggedItemId.current = 0;
+    draggedItemId.current = null;
     if (elem === null || elem === id) return;
-    // тащили вниз?ставим после цели, вверх-перед
-    const place = items.indexOf(elem) < items.indexOf(id) ? "after" : "before";
+   
 
     await fetch("/api/move", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: elem, targetId: id, place }),
+      body: JSON.stringify({ id: elem, targetId: id}),
     });
     onChange?.();
   }
@@ -62,7 +61,7 @@ export function ItemList({
       {items.map((id) => (
         <div
           key={id}
-          draggable
+          draggable={side === "right"}
           onDragStart={() => (draggedItemId.current = id)}
           onDragOver={(e) => e.preventDefault()}
           onDrop={() => handleDragge(id)}

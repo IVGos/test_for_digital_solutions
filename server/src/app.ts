@@ -18,7 +18,7 @@ const idBody = z.object({
 const moveBody = z.object({
   id: z.number().int().positive(),
   targetId: z.number().int().positive(),
-  place: z.enum(["before", "after"]),
+ 
 });
 
 
@@ -83,8 +83,8 @@ export function createApp(store: RootStore) {
   app.post("/api/move", async (req, res) => {
     const body = moveBody.safeParse(req.body);
     if (!body.success) return sendError(res, "validation_error", body.error.issues[0]?.message);
-    const { id, targetId, place } = body.data;
-     sendResult(res, await readQueue.putTaskToQueue(`move:${id}:${targetId}:${place}`, () => store.moveItem(id, targetId, place), true));
+    const { id, targetId} = body.data;
+     sendResult(res, await readQueue.putTaskToQueue(`move:${id}:${targetId}`, () => store.moveItem(id, targetId), true));
   });
 
   app.post("/api/add", async (req, res) => {

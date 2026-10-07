@@ -2,7 +2,7 @@ export const PAGE_SIZE = 20;
 export const BASE_SIZE = 1000000;
 
 export type Page = { items: number[]; nextCursor: number | null };
-export type Place = "before" | "after";
+
 export type StoreError =
   | "invalid_id"
   | "item_not_found"
@@ -75,16 +75,13 @@ export function createStore(baseSize: number = BASE_SIZE) {
     return { ok: true };
   }
   // вытащить и вставить
-  function moveItem(id: number, targetId: number, place: Place): Result {
+  function moveItem(id: number, targetId: number): Result {
     if (!selected.has(id) || !selected.has(targetId)) {
       return { ok: false, error: "not_selected" };
     }
-    if (id === targetId) return { ok: true };
-
+    const to = order.indexOf(targetId);
     order.splice(order.indexOf(id), 1);
-    const targetIndex = order.indexOf(targetId);
-    const insertAt = place === "before" ? targetIndex : targetIndex + 1;
-    order.splice(insertAt, 0, id);
+    order.splice(to, 0, id);
     return { ok: true };
   }
 
@@ -115,6 +112,5 @@ export function createStore(baseSize: number = BASE_SIZE) {
     moveItem,
   };
 }
-
 
 export type RootStore = ReturnType<typeof createStore>;
